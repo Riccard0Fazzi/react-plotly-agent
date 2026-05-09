@@ -16,7 +16,7 @@ import pydantic
 import shutil
 import argparse
 import time
-from src.domain.models import ExecutionResult
+from src.models.execution_result import ExecutionResult
 
 SUPPORTED_DATA_EXTENSIONS = {".csv", ".xlsx", ".json"}
 EXECUTION_TIMEOUT_SECONDS = 30
