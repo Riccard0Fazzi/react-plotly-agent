@@ -17,9 +17,7 @@ import shutil
 import argparse
 import time
 from src.models.execution_result import ExecutionResult
-
-SUPPORTED_DATA_EXTENSIONS = {".csv", ".xlsx", ".json"}
-EXECUTION_TIMEOUT_SECONDS = 30
+from src.config import SUPPORTED_DATA_EXTENSIONS, EXECUTION_TIMEOUT_SECONDS
 
 class SubprocessCodeExecutor:
 
@@ -51,8 +49,21 @@ class SubprocessCodeExecutor:
             script_path = tmp_path / "script.py"
             # first we have to clean and ensure that the code given by the LLM is ready to be saved and executed
             cleaned_code = self._clean_generated_code(code)
+            # add network access block 
+            NETWORK_BLOCKING_CODE = """
+import socket
+
+def _blocked_network_call(*args, **kwargs):
+    raise RuntimeError("Network access is disabled in the sandbox.")
+
+    socket.socket = _blocked_network_call
+    socket.create_connection = _blocked_network_call
+"""
             # save the code in the temporary script
-            script_path.write_text(cleaned_code)
+            script_path.write_text(
+                NETWORK_BLOCKING_CODE + "\n\n" + cleaned_code,
+                encoding="utf-8",
+            )
             # execute the script into subprocess
             start_time = time.perf_counter()
             try:
@@ -120,7 +131,7 @@ class SubprocessCodeExecutor:
         if suffix not in SUPPORTED_DATA_EXTENSIONS:
             raise ValueError(
                 f"Unsupported dataset format '{suffix}'. "
-                f"Supported formats are: {sorted(SUPPORTED_DATA_EXTENSIONS)}"
+                f"Supported formats are: {SUPPORTED_DATA_EXTENSIONS}"
             )
 
         sandbox_data_path = tmp_path / f"input{suffix}"
