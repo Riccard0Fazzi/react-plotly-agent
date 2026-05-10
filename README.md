@@ -491,6 +491,21 @@ Supported formats:
 
 ---
 
+# Possible Future Improvements
+
+Possible improvements would include:
+
+- stronger sandbox isolation (e.g. container-level execution),
+- improved retry and recovery strategies,
+- better prompt compression and memory retrieval,
+- support for additional plotting libraries and chart types,
+- structured logging and automated tests,
+- support for cloud LLM providers in addition to local Ollama models,
+- smarter dataset inspection and schema understanding,
+- retrieval of previously generated plots from memory metadata.
+
+---
+
 # Author
 
 Riccardo Fazzi
