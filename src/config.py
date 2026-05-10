@@ -14,7 +14,7 @@ SUPPORTED_DATA_EXTENSIONS = {".csv", ".xlsx", ".json"}
 EXECUTION_TIMEOUT_SECONDS = 30
 
 # LLM configuration
-DEFAULT_OLLAMA_MODEL = "qwen2.5-coder:7b"
+DEFAULT_OLLAMA_MODEL = "qwen2.5-coder:3b"
 BASE_URL_OLLAMA = "http://localhost:11435"
 LLM_TIMEOUT_SECONDS = 1000
 

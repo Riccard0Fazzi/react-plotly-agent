@@ -19,9 +19,11 @@ https://github.com/user-attachments/assets/b8ffa562-9789-4b07-8840-b31af1ce96dd
 
 The interactive HTML charts generated during the demo are available in:
 
-- `demo/outputs/color_pie_chart.html`
-- `demo/outputs/color_histogram.html`
+- `outputs/color_pie_chart.html`
+- `outputs/color_histogram.html`
+
 ---
+
 # Project Overview
 
 This project implements a local AI agent capable of:
@@ -37,6 +39,107 @@ The system follows a ReAct-style workflow based on:
 - action selection,
 - observation,
 - iterative correction.
+
+---
+
+
+# Installation
+
+## Clone Repository
+
+```bash
+git clone <repository-url>
+cd react-plotly-agent
+```
+
+---
+
+# Create Virtual Environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+---
+
+# Install Dependencies
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+---
+
+
+# Start Docker Services
+
+The project includes a `docker-compose.yml` file used to start Ollama and Neo4j.
+
+```bash
+docker compose up -d
+```
+
+On the first startup, the ollama-pull service downloads the configured model automatically.
+
+---
+
+# Verify Running Containers
+
+```bash
+docker ps
+```
+
+Expected containers:
+
+```text
+react-plotly-ollama
+react-chart-agent-neo4j
+```
+---
+
+# Configuration
+
+Main configuration parameters can be modified inside:
+
+```text
+src/config.py
+```
+
+---
+
+# Running the Agent
+
+Example:
+
+```bash
+python -m main \
+"Create a pie chart using exactly the column 'Color'." \
+--input_file data/products-100.csv
+```
+
+---
+
+# Memory-Enabled Execution
+
+```bash
+python -m main \
+"Create a pie chart using exactly the column 'Color'." \
+--input_file data/products-100.csv \
+--enable_memory \
+--conversation_id color_demo
+```
+
+Follow-up request:
+
+```bash
+python -m main \
+"Now create a histogram using the same column as before." \
+--input_file data/products-100.csv \
+--enable_memory \
+--conversation_id color_demo
+```
 
 ---
 
@@ -113,9 +216,7 @@ These components handle external tools and infrastructure such as:
 
 Contains the main application logic.
 
-The central component is:
-
-ReactChartAgent
+The central component is: `ReactChartAgent`
 
 This class manages:
 
@@ -129,9 +230,7 @@ This class manages:
 
 Contains shared models and data structures used across the project.
 
-Current model:
-
-ExecutionResult
+Current model: `ExecutionResult`
 
 This model is used to store information about code execution results such as:
 
@@ -207,9 +306,9 @@ Implemented protections:
 
 - execution in a separate subprocess,
 - timeout enforcement,
-- isolated temporary working directory,
 - restricted filesystem scope,
-- network access disabled.
+- isolated temporary working directory,
+- restricted execution environment.
 
 ---
 
@@ -224,32 +323,20 @@ Reasons:
 - no API costs,
 - portability.
 
-Default model:
-
-```text
-qwen2.5-coder:3b
-```
-
-Alternative recommended model:
-
-```text
-qwen2.5-coder:7b
-```
-The 3B model was mainly used due to limited local computational resources and faster inference speed on CPU-only systems.
-
-However, during development it was observed that the 7B model provides significantly better reasoning, retry behavior, and code generation reliability, especially for more complex plotting tasks and recovery scenarios.
-
-For more stable behavior, the 7B model should generally be preferred when hardware resources allow it.
-
-Observed tradeoff:
-
-- 7B provides significantly better reasoning and code quality,
-- 3B is faster but less reliable on complex tasks.
-
 For local inference, I mainly looked at open-source coding models such as Qwen and DeepSeek.
 
 Due to limited computational resources, I started with smaller local models that could run reasonably well on CPU-only systems.
 
+Selected default model:
+
+```text
+qwen2.5-coder:7b   
+```
+Alternative lightweight model:
+
+```text
+qwen2.5-coder:3b
+```
 In the end, I selected Qwen2.5-Coder because it provided a good balance between:
 
 - inference speed,
@@ -259,6 +346,7 @@ In the end, I selected Qwen2.5-Coder because it provided a good balance between:
 
 During development, the 7B version consistently produced better reasoning and retry behavior, while the 3B version was faster but less reliable on more complex tasks.
 
+For more stable behavior, the 7B model should generally be preferred when hardware resources allow it.
 ---
 
 # Docker-Based Deployment
@@ -275,7 +363,7 @@ Reasons:
 The setup also includes:
 
 - Neo4j Docker container,
-- automatic Ollama model download,
+- automatic Ollama model download.
 
 ---
 
@@ -307,7 +395,6 @@ A Neo4j-based persistence layer was designed to support:
 
 - conversation storage,
 - message history,
-- generated plot tracking,
 - conversation resumption.
 
 Stored entities:
@@ -348,113 +435,6 @@ Reasons:
 If using WSL2 on Windows:
 
 Docker Desktop must have WSL integration enabled for the target Linux distribution.
-
----
-
-# Installation
-
-## Clone Repository
-
-```bash
-git clone <repository-url>
-cd react-plotly-agent
-```
-
----
-
-# Create Virtual Environment
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
----
-
-# Install Dependencies
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
----
-
-# Start Docker Services
-
-The project includes a `docker-compose.yml` configuration file used to start:
-
-- Ollama
-- Neo4j
-
-
-```bash
-docker compose up -d
-```
-
-This starts:
-
-- Ollama
-- Neo4j
-
----
-
-# Verify Running Containers
-
-```bash
-docker ps
-```
-
-Expected containers:
-
-```text
-react-plotly-ollama
-react-chart-agent-neo4j
-```
----
-
-# Configuration
-
-Main configuration parameters can be modified inside:
-
-```text
-src/config.py
-```
-
-
----
-
-# Running the Agent
-
-Example:
-
-```bash
-python -m main \
-"Create a pie chart using exactly the column 'Color'." \
---input_file data/products-100.csv
-```
-
----
-
-# Memory-Enabled Execution
-
-```bash
-python -m main \
-"Create a pie chart using exactly the column 'Color'." \
---input_file data/products-100.csv \
---enable_memory \
---conversation_id color_demo
-```
-
-Follow-up request:
-
-```bash
-python -m main \
-"Now create a histogram using the same column as before." \
---input_file data/products-100.csv \
---enable_memory \
---conversation_id color_demo
-```
 
 ---
 

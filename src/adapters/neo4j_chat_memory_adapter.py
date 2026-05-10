@@ -63,25 +63,3 @@ class Neo4jChatMemoryAdapter(ChatMemoryPort):
                 }
                 for record in result
             ]
-
-def get_past_plots(self, conversation_id: str) -> list[str]:
-    query = """
-    MATCH (:Conversation {id: $conversation_id})-[:HAS_MESSAGE]->(m:Message)
-    WHERE m.metadata IS NOT NULL
-    RETURN m.metadata AS metadata
-    ORDER BY m.timestamp DESC
-    """
-
-    files = []
-
-    with self.driver.session() as session:
-        result = session.run(query, conversation_id=conversation_id)
-
-        for record in result:
-            metadata = json.loads(record["metadata"])
-
-            if "generated_files" in metadata:
-                files.extend(metadata["generated_files"])
-
-    return files
-

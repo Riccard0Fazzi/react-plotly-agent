@@ -1,3 +1,5 @@
+# src/adapters/ollama_llm_adapter.py
+
 import requests
 from src.config import LLM_TIMEOUT_SECONDS, DEFAULT_OLLAMA_MODEL, BASE_URL_OLLAMA
 from src.ports.llm_port import LLMPort

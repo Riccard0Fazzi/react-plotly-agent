@@ -1,12 +1,5 @@
-"""
-This module contains a function that takes as input a str object which contains the generated python code from the LLM to be executed in a separate process
+# src/adapters/suprocess_code_executor.py
 
-Requirements:
-    - enforce execution timeout
-    - restrict filesystem access to temporary working directory (for safety)
-    - prevent external network access (the generated script should not be able to access the network)
-
- """
 from pathlib import Path
 import tempfile
 import subprocess
@@ -24,7 +17,6 @@ class SubprocessCodeExecutor(CodeExecutorPort):
 
     def execute_code(self, code: str, input_data_path: Path) -> ExecutionResult:
         # input validation
-        # here is important to not raise exceptions because the ReAct loop can use these as observations and retry
         if not isinstance(code, str):
             return ExecutionResult(
                 success = False,
@@ -46,9 +38,9 @@ class SubprocessCodeExecutor(CodeExecutorPort):
             sandbox_data_path = self._prepare_input_data_in_sandbox(input_data_path, tmp_path)
 
             # now i have both the temporary directory and the temporary copy of the input file data
-            # the next step is to save the python script from the llm into a temp .py file
+            # save the python script from the llm into a temp .py file
             script_path = tmp_path / "script.py"
-            # first we have to clean and ensure that the code given by the LLM is ready to be saved and executed
+            # clean the code to be executed
             cleaned_code = self._clean_generated_code(code)
             # add network access block 
             NETWORK_BLOCKING_CODE = """
@@ -77,10 +69,6 @@ def _blocked_network_call(*args, **kwargs):
                 )
 
                 execution_time = time.perf_counter() - start_time
-                # very important, after execution we need to check wheter the html files have been stored
-                # because otherwise if are store in the temporary directory we will lose them after this function returns.
-                # to identify these files, we don't know which path has written the LLM in the python code, but we know for sure that the script
-                # has been executed from the temporary directory, so any relative path will be inside the temp directory
 
                 persistent_outputs = []
 
@@ -137,7 +125,7 @@ def _blocked_network_call(*args, **kwargs):
         return sandbox_data_path
 
     def _clean_generated_code(self, code: str) -> str:
-        # remove markdown fences
+        # remove markdown 
         # skip extra whitespaces
         code = code.strip()
         if code.startswith("```python"):

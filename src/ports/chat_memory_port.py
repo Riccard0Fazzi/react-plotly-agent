@@ -1,4 +1,5 @@
 # src/ports/chat_memory_port.py
+
 import abc
 
 class ChatMemoryPort:

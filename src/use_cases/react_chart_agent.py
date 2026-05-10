@@ -19,7 +19,7 @@ class Charts_Agent:
             max_attempts: int = 10
     ):
         self.system = system_prompt # store the system prompt
-        self.messages = [] # this will contain the entire conversation history
+        self.messages = [] # conversation history
         self.llm = llm
         self.executor = executor
         self.max_attempts = max_attempts
@@ -95,8 +95,8 @@ class Charts_Agent:
 
     def _inspect_dataset(self, dataset_path: Path) -> str:
         # this function extracts useful information about the input file
-        # it is really useful because it directly gives very useful informations to the llm about the structure of the data file
-        # so the llm directly has access to informations that otherwise should retrieve by itself spending ReAct cycles
+        # it directly gives very useful informations to the llm about the structure of the data file
+        # so the llm directly has access to informations that otherwise should retrieve by itself spending cycles
         suffix = dataset_path.suffix.lower()
         if suffix not in SUPPORTED_DATA_EXTENSIONS:
             raise ValueError(
