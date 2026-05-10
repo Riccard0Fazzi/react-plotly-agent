@@ -81,7 +81,19 @@ The project includes a `docker-compose.yml` file used to start Ollama and Neo4j.
 docker compose up -d
 ```
 
-On the first startup, the ollama-pull service downloads the configured model automatically.
+On the first startup, the `ollama-pull` service downloads the configured model. This can take several minutes.
+
+You can monitor the download with:
+
+```bash
+docker compose logs -f ollama-pull
+```
+
+Before running the agent, verify that the model is available:
+
+```bash
+curl http://localhost:11435/api/tags
+```
 
 ---
 
