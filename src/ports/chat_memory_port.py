@@ -19,5 +19,3 @@ class ChatMemoryPort:
     def load_messages(self, conversation_id: str) -> list[dict[str,str]]:
         raise NotImplementedError
     
-    def get_pasts_plots(self, conversation_id: str) -> list[str]:
-        raise NotImplementedError
