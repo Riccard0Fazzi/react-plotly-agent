@@ -38,20 +38,11 @@ The system follows a ReAct-style workflow based on:
 - observation,
 - iterative correction.
 
-The implementation prioritizes:
-
-- simplicity,
-- modularity,
-- local reproducibility,
-- robustness,
-- explainability of agent behavior.
-
 ---
 
 # Main Features
 
 - ReAct-style autonomous agent loop
-- Dataset inspection and schema awareness
 - Automatic Plotly chart generation
 - Sandboxed Python execution
 - Retry and self-correction mechanisms
@@ -64,7 +55,7 @@ The implementation prioritizes:
 
 # Architecture
 
-The project follows a lightweight Ports & Adapters (Hexagonal/Clean Architecture-inspired) organization.
+The project follows a lightweight Ports & Adapters organization.
 
 ## Folder Structure
 
@@ -78,91 +69,77 @@ src/
 
 ---
 
-# Ports Layer
+# ports/
 
-The `ports/` layer defines abstract interfaces used by the application logic.
+Contains the abstract interfaces used by the agent.
 
 Examples:
 
-- `LLMPort`
-- `CodeExecutorPort`
-- `ChatMemoryPort`
+- LLMPort
+- CodeExecutorPort
+- ChatMemoryPort
 
-Purpose:
+These interfaces make it easier to replace implementations without changing the main agent logic.
 
-- decouple business logic from concrete implementations,
-- allow adapter replacement without changing the agent logic,
-- enforce dependency inversion.
+For example, the LLM could be switched from Ollama to another provider without modifying the agent itself.
 
 Example:
-
 ```python
-class CodeExecutorPort:
-    def execute_code(
-        self,
-        code: str,
-        input_data_path: Path
-    ) -> ExecutionResult:
+class CodeExecutorPort(abc.ABC):
+
+    @abc.abstractmethod
+    def execute_code(self, code: str, input_data_path: Path) -> ExecutionResult:
         raise NotImplementedError
 ```
-
-The agent depends on abstractions rather than concrete implementations.
-
 ---
 
-# Adapters Layer
+# adapters/
 
-The `adapters/` layer contains concrete implementations of the ports.
+Contains the concrete implementations of the interfaces.
 
 Current adapters:
 
-- `OllamaLLMAdapter`
-- `SubprocessCodeExecutor`
-- `Neo4jChatMemoryAdapter`
+OllamaLLMAdapter
+SubprocessCodeExecutor
+Neo4jChatMemoryAdapter
 
-Responsibilities:
+These components handle external tools and infrastructure such as:
 
-- external communication,
-- infrastructure handling,
-- sandbox execution,
-- persistence,
-- HTTP communication.
-
+HTTP requests,
+code execution,
+database persistence.
 ---
+# use_cases/
 
-# Use Cases Layer
+Contains the main application logic.
 
-The `use_cases/` layer contains the application orchestration logic.
+The central component is:
 
-Main component:
+ReactChartAgent
 
-- `ReactChartAgent`
+This class manages:
 
-Responsibilities:
-
-- maintain the ReAct loop,
-- build prompts,
-- parse actions,
-- execute tools,
-- handle retries,
-- manage observations.
-
-The agent does not directly depend on infrastructure details.
-
+the ReAct loop,
+prompt generation,
+action parsing,
+retry handling,
+execution observations.
 ---
+# domain/
 
-# Domain Layer
-
-Contains shared domain models and data structures.
+Contains shared models and data structures used across the project.
 
 Current model:
 
-- `ExecutionResult`
+ExecutionResult
 
-Purpose:
+This model is used to store information about code execution results such as:
 
-- centralize execution metadata,
-- standardize communication between components.
+stdout,
+stderr,
+generated files,
+execution time,
+timeout status.
 
 ---
 
@@ -253,11 +230,16 @@ Default model:
 qwen2.5-coder:3b
 ```
 
-Alternative model:
+Alternative recommended model:
 
 ```text
 qwen2.5-coder:7b
 ```
+The 3B model was mainly used due to limited local computational resources and faster inference speed on CPU-only systems.
+
+However, during development it was observed that the 7B model provides significantly better reasoning, retry behavior, and code generation reliability, especially for more complex plotting tasks and recovery scenarios.
+
+For more stable behavior, the 7B model should generally be preferred when hardware resources allow it.
 
 Observed tradeoff:
 
@@ -281,7 +263,6 @@ The setup also includes:
 
 - Neo4j Docker container,
 - automatic Ollama model download,
-- persistent Docker volumes.
 
 ---
 
@@ -300,7 +281,6 @@ The prompts were iteratively refined to:
 
 Implemented improvements:
 
-- reduced inspection verbosity,
 - truncated stderr/stdout in retry prompts,
 - reduced context size,
 - limited generated tokens,
@@ -339,27 +319,17 @@ The ReAct orchestration was implemented manually rather than using LangGraph.
 
 Reasons:
 
-- educational value,
-- full control over execution flow,
-- transparency of the reasoning pipeline,
-- easier debugging during development.
-
----
-
-## Simplicity vs Overengineering
-
-The architecture intentionally avoids:
-
-- excessive abstractions,
-- unnecessary framework layers,
-- premature optimization.
+- better understanding of the execution flow,
+- full control over the reasoning loop,
+- easier debugging during development,
+- simpler architecture for the scope of the project.
 
 ---
 
 # Requirements
 
 - Python 3.11+
-- Docker Desktop or Docker Engine
+- Docker Desktop 
 - Docker Compose v2
 
 If using WSL2 on Windows:
@@ -381,18 +351,9 @@ cd react-plotly-agent
 
 # Create Virtual Environment
 
-Linux/macOS:
-
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\activate
 ```
 
 ---
@@ -407,6 +368,12 @@ python -m pip install -r requirements.txt
 ---
 
 # Start Docker Services
+
+The project includes a `docker-compose.yml` configuration file used to start:
+
+- Ollama
+- Neo4j
+
 
 ```bash
 docker compose up -d
@@ -460,7 +427,7 @@ Follow-up request:
 
 ```bash
 python -m main \
-"Now convert it into a donut chart and use a dark theme." \
+"Now create a histogram using the same column as before." \
 --input_file data/products-100.csv \
 --enable_memory \
 --conversation_id color_demo
@@ -483,14 +450,6 @@ username: neo4j
 password: password
 ```
 
-Example query:
-
-```cypher
-MATCH (c:Conversation)-[:HAS_MESSAGE]->(m:Message)
-RETURN c, m
-LIMIT 50
-```
-
 ---
 
 # Example Datasets
@@ -511,25 +470,9 @@ Supported formats:
 # Current Limitations
 
 - The current implementation stores full ReAct traces in memory.
-- Memory retrieval currently loads recent messages only.
 - Only local Ollama inference is supported.
 - Neo4j metadata is stored as JSON strings for simplicity.
 - The sandbox is process-isolated but not VM-level isolated.
-
----
-
-# Future Improvements
-
-Possible future extensions:
-
-- semantic retrieval over conversation history,
-- vector database integration,
-- structured plot metadata indexing,
-- streaming LLM responses,
-- improved sandbox isolation,
-- support for additional charting libraries,
-- automatic column similarity matching,
-- LangGraph-based orchestration alternative.
 
 ---
 

@@ -14,7 +14,7 @@ services:
     entrypoint: /bin/sh
     command: >
       -c "sleep 10 &&
-          OLLAMA_HOST=http://ollama:11434 ollama pull qwen2.5-coder:3b"
+          OLLAMA_HOST=http://ollama:11434 ollama pull qwen2.5-coder:7b"
     volumes:
       - ollama_models:/root/.ollama
     restart: "no"
