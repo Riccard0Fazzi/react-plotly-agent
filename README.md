@@ -1,3 +1,6 @@
+
+
+
 # React Plotly Agent
 
 > Local AI agent for dataset analysis and autonomous Plotly visualization generation using a ReAct-style workflow.
@@ -7,6 +10,14 @@
 ## Demo — Persistent Memory with Neo4j
 
 This demo shows the agent generating an initial Plotly chart, storing the conversation in Neo4j, and then using the same `conversation_id` to handle a follow-up request that refers to the previous chart context.
+
+
+
+https://github.com/user-attachments/assets/b8ffa562-9789-4b07-8840-b31af1ce96dd
+
+
+
+https://github.com/user-attachments/assets/bb70df9f-00f7-47bf-8218-d344ecfe5b33
 
 
 
