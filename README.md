@@ -99,15 +99,15 @@ Contains the concrete implementations of the interfaces.
 
 Current adapters:
 
-OllamaLLMAdapter
-SubprocessCodeExecutor
-Neo4jChatMemoryAdapter
+- OllamaLLMAdapter
+- SubprocessCodeExecutor
+- Neo4jChatMemoryAdapter
 
 These components handle external tools and infrastructure such as:
 
-HTTP requests,
-code execution,
-database persistence.
+- HTTP requests,
+- code execution,
+- database persistence.
 ---
 # use_cases/
 
@@ -119,11 +119,11 @@ ReactChartAgent
 
 This class manages:
 
-the ReAct loop,
-prompt generation,
-action parsing,
-retry handling,
-execution observations.
+- the ReAct loop,
+- prompt generation,
+- action parsing,
+- retry handling,
+- execution observations.
 ---
 # domain/
 
@@ -135,11 +135,11 @@ ExecutionResult
 
 This model is used to store information about code execution results such as:
 
-stdout,
-stderr,
-generated files,
-execution time,
-timeout status.
+- stdout,
+- stderr,
+- generated files,
+- execution time,
+- timeout status.
 
 ---
 
@@ -245,6 +245,19 @@ Observed tradeoff:
 
 - 7B provides significantly better reasoning and code quality,
 - 3B is faster but less reliable on complex tasks.
+
+For local inference, I mainly looked at open-source coding models such as Qwen and DeepSeek.
+
+Due to limited computational resources, I started with smaller local models that could run reasonably well on CPU-only systems.
+
+In the end, I selected Qwen2.5-Coder because it provided a good balance between:
+
+- inference speed,
+- code generation quality,
+- reasoning capability,
+- local hardware requirements.
+
+During development, the 7B version consistently produced better reasoning and retry behavior, while the 3B version was faster but less reliable on more complex tasks.
 
 ---
 
@@ -398,6 +411,16 @@ Expected containers:
 react-plotly-ollama
 react-chart-agent-neo4j
 ```
+---
+
+# Configuration
+
+Main configuration parameters can be modified inside:
+
+```text
+src/config.py
+```
+
 
 ---
 
