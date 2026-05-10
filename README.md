@@ -17,10 +17,6 @@ https://github.com/user-attachments/assets/b8ffa562-9789-4b07-8840-b31af1ce96dd
 
 
 
-https://github.com/user-attachments/assets/bb70df9f-00f7-47bf-8218-d344ecfe5b33
-
-
-
 The interactive HTML charts generated during the demo are available in:
 
 - `demo/outputs/color_pie_chart.html`
