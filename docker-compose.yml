@@ -3,9 +3,21 @@ services:
     image: ollama/ollama:latest
     container_name: react-plotly-ollama
     ports:
-      - "11434:11434"
+      - "11435:11434"
     volumes:
       - ollama_models:/root/.ollama
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    entrypoint: /bin/sh
+    command: >
+      -c "sleep 10 &&
+          OLLAMA_HOST=http://ollama:11434 ollama pull qwen2.5-coder:3b"
+    volumes:
+      - ollama_models:/root/.ollama
+    restart: "no"
 
   neo4j:
     image: neo4j:5

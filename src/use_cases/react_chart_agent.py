@@ -71,8 +71,6 @@ class Charts_Agent:
                 role="assistant",
                 content=result
             )
-        print(f"Messages{self.messages}\n")
-        print(60*"=")
 
         return result
     

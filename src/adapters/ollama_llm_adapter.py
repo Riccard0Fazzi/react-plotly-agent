@@ -1,11 +1,11 @@
 import requests
-from src.config import LLM_TIMEOUT_SECONDS, DEFAULT_OLLAMA_MODEL
+from src.config import LLM_TIMEOUT_SECONDS, DEFAULT_OLLAMA_MODEL, BASE_URL_OLLAMA
 from src.ports.llm_port import LLMPort
 
 class OllamaLLMAdapter(LLMPort):
     def __init__(
         self,
-        base_url: str = "http://localhost:11434",
+        base_url: str = BASE_URL_OLLAMA,
         model: str = DEFAULT_OLLAMA_MODEL,
         timeout_seconds: int = LLM_TIMEOUT_SECONDS,
     ):
