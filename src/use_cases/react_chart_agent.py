@@ -1,32 +1,88 @@
 from src.adapters.ollama_llm_adapter import OllamaLLMAdapter
 from src.adapters.subprocess_code_executor import SubprocessCodeExecutor
-from src.models.execution_result import ExecutionResult
+from src.adapters.neo4j_chat_memory_adapter import Neo4jChatMemoryAdapter
+from src.domain.models import ExecutionResult
 from pathlib import Path
-from src.config import SUPPORTED_DATA_EXTENSIONS
+from src.config import SUPPORTED_DATA_EXTENSIONS, MAX_STDERR_CHARS, MAX_STDOUT_CHARS
 import pandas as pd
+import time 
 
 class Charts_Agent:
-    def __init__(self, llm, executor, system_prompt: str, max_attempts: int = 3):
+
+    def __init__(
+            self,
+            llm: OllamaLLMAdapter,
+            executor: SubprocessCodeExecutor,
+            system_prompt: str,
+            memory: Neo4jChatMemoryAdapter = None,
+            conversation_id: str = "default",
+            max_attempts: int = 10
+    ):
         self.system = system_prompt # store the system prompt
         self.messages = [] # this will contain the entire conversation history
         self.llm = llm
         self.executor = executor
         self.max_attempts = max_attempts
+        self.memory = memory
+        self.conversation_id = conversation_id
 
-        if self.system: # if a system prompt exist, store it as the first message in history
-            self.messages.append({'role':'system', 'content':system_prompt})
+        if self.memory:
+            self.memory.create_conversation(self.conversation_id)
+
+            previous_messages = self.memory.load_messages(self.conversation_id)
+
+            if previous_messages:
+                self.messages = previous_messages
+
+        # add system prompt only if no previous history exists
+        if not self.messages:
+            system_message = {
+                "role": "system",
+                "content": system_prompt
+            }
+
+            self.messages.append(system_message)
+
+            if self.memory:
+                self.memory.save_message(
+                    self.conversation_id,
+                    role="system",
+                    content=system_prompt
+                )
+        
+
 
     def __call__(self, message):
         self.messages.append({'role': 'user', 'content': message})
-        result = self.llm.chat(self.messages) 
-        self.messages.append({'role': 'assistant', 'content': result})
-        return result
+        if self.memory:
+            self.memory.save_message(
+                self.conversation_id,
+                role="user",
+                content=message
+            )
 
+
+        result = self.llm.chat(self.messages)
+        self.messages.append({'role': 'assistant', 'content': result})
+
+        if self.memory:
+            self.memory.save_message(
+                self.conversation_id,
+                role="assistant",
+                content=result
+            )
+        print(f"Messages{self.messages}\n")
+        print(60*"=")
+
+        return result
+    
     def _format_execution_result(self, result: ExecutionResult) -> str:
+        stderr = result.stderr[-MAX_STDERR_CHARS:] if result.stderr else ""
+        stdout = result.stdout[-MAX_STDOUT_CHARS:] if result.stdout else ""
         if result.success and result.generated_files:
-             return (
+            return (
             "Execution succeeded.\n"
-            f"STDOUT:\n{result.stdout}\n\n"
+            f"STDOUT:\n{stdout}\n\n"
             f"Generated HTML files:\n"
             + "\n".join(str(path) for path in result.generated_files)
         )
@@ -35,8 +91,8 @@ class Charts_Agent:
             "Execution failed.\n"
             f"Timed out: {result.timed_out}\n"
             f"Exit code: {result.exit_code}\n\n"
-            f"STDOUT:\n{result.stdout}\n\n"
-            f"STDERR:\n{result.stderr}\n"
+            f"STDOUT:\n{stdout}\n\n"
+            f"STDERR:\n{stderr}\n"
         )
 
     def _inspect_dataset(self, dataset_path: Path) -> str:
@@ -59,8 +115,9 @@ class Charts_Agent:
 
         return (
                 f"Columns: {list(df.columns)}\n\n"
-                f"First rows: \n{df.head().to_string(index = False)}\n\n"
                 f"Data types: \n{df.dtypes.to_string()}"
+                f"Missing values:\n{df.isna().sum().to_string()}"
+
         )
     
     # generic function that give a python script in a str executes it and return the execution result
@@ -97,15 +154,12 @@ class Charts_Agent:
         last_result = None
 
         for attempt in range(1, self.max_attempts + 1):
-            print(f"\n--- Agent attempt {attempt}/{self.max_attempts} ---")
+            print(f"\n=== Attempt {attempt}/{self.max_attempts} ===")
             llm_output = self(prompt)
-            #print(type(generated_code))
-            print(90*"=")
-            print("Assistant output: \n")
-            print(llm_output)
-            print(90*"=")
-
             action = self._parse_action(llm_output)
+            print("\nAssistant:")
+            print(llm_output)
+
             if action == "inspect_dataset":
                 observation = self._inspect_dataset(dataset_path)
                 prompt = f"Observation:\n{observation}"
@@ -121,6 +175,17 @@ class Charts_Agent:
                 
                 # check result
                 if result.success and result.generated_files:
+                    print("Execution: success")
+                    # if memory enabled store generated plot paths
+                    if self.memory:
+                        self.memory.save_message(
+                            self.conversation_id,
+                            role="assistant",
+                            content="Plot generated successfully.",
+                            metadata={
+                                "generated_files": [str(path) for path in result.generated_files]
+                            },
+                        )
                     prompt = (
                         "Observation:\n"
                         f"{observation}\n\n"
@@ -133,6 +198,7 @@ class Charts_Agent:
                     )
 
             elif action == "answer":
+                print("Final answer received.")
                 return last_result
             
             else:

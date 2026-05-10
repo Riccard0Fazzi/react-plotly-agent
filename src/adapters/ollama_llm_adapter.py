@@ -1,9 +1,11 @@
 import requests
 from src.config import LLM_TIMEOUT_SECONDS, DEFAULT_OLLAMA_MODEL
-class OllamaLLMAdapter:
+from src.ports.llm_port import LLMPort
+
+class OllamaLLMAdapter(LLMPort):
     def __init__(
         self,
-        base_url: str = "http://localhost:11435",
+        base_url: str = "http://localhost:11434",
         model: str = DEFAULT_OLLAMA_MODEL,
         timeout_seconds: int = LLM_TIMEOUT_SECONDS,
     ):
@@ -19,10 +21,19 @@ class OllamaLLMAdapter:
                 "messages": messages,
                 "stream": False,
                 "options": {
-                    "temperature": 0.1,
-                    "num_predict": 700,
+                    "temperature": 0,
+                    "num_predict": 500,
+                    "num_ctx": 2048,
                 },
             },
             timeout=self.timeout_seconds,
         )
-        return response.json()["message"]["content"]
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        if "message" not in data:
+            raise RuntimeError(f"Unexpected Ollama response: {data}")
+
+        return data["message"]["content"]

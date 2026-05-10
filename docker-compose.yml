@@ -3,9 +3,21 @@ services:
     image: ollama/ollama:latest
     container_name: react-plotly-ollama
     ports:
-      - "11435:11434"
+      - "11434:11434"
     volumes:
       - ollama_models:/root/.ollama
 
+  neo4j:
+    image: neo4j:5
+    container_name: react-chart-agent-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/password
+    volumes:
+      - neo4j_data:/data
+
 volumes:
   ollama_models:
+  neo4j_data:

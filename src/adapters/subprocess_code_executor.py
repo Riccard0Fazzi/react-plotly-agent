@@ -16,10 +16,11 @@ import pydantic
 import shutil
 import argparse
 import time
-from src.models.execution_result import ExecutionResult
+from src.domain.models import ExecutionResult
 from src.config import SUPPORTED_DATA_EXTENSIONS, EXECUTION_TIMEOUT_SECONDS
+from src.ports.code_executor_port import CodeExecutorPort
 
-class SubprocessCodeExecutor:
+class SubprocessCodeExecutor(CodeExecutorPort):
 
     def execute_code(self, code: str, input_data_path: Path) -> ExecutionResult:
         # input validation
@@ -113,10 +114,7 @@ def _blocked_network_call(*args, **kwargs):
                          execution_time_seconds = execution_time,
                          timed_out = True,
                  )
-                  
-
-
-
+                
     def _prepare_input_data_in_sandbox(self, input_data_path: Path, tmp_path: Path) -> Path:
 
         input_data_path = input_data_path.resolve()
@@ -152,25 +150,6 @@ def _blocked_network_call(*args, **kwargs):
             code = code.removesuffix("```")
 
         return code.strip()
-
-
-
-
-def main():
-    print("testing the class and the methods")
-    parser = argparse.ArgumentParser()
-    parser.add_argument("input_file")
-    args = parser.parse_args()
-
-    input_file = Path(args.input_file)
-    test_code = input_file.read_text(encoding = "utf-8")
-    ce = SubprocessCodeExecutor()
-    data_path = Path("src/adapters/industry.csv")
-    res = ce.execute_code(test_code, data_path)
-    print(res.generated_files)
-
-if __name__ == "__main__":
-    main()
 
 
 
