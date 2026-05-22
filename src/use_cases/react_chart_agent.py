@@ -1,6 +1,6 @@
-from src.adapters.ollama_llm_adapter import OllamaLLMAdapter
-from src.adapters.subprocess_code_executor import SubprocessCodeExecutor
-from src.adapters.neo4j_chat_memory_adapter import Neo4jChatMemoryAdapter
+from src.ports.llm_port import LLMPort
+from src.ports.chat_memory_port import ChatMemoryPort
+from src.code_executor_port import CodeExecutorPort
 from src.domain.models import ExecutionResult
 from pathlib import Path
 from src.config import SUPPORTED_DATA_EXTENSIONS, MAX_STDERR_CHARS, MAX_STDOUT_CHARS
@@ -11,10 +11,10 @@ class Charts_Agent:
 
     def __init__(
             self,
-            llm: OllamaLLMAdapter,
-            executor: SubprocessCodeExecutor,
+            llm: LLMPort,
+            executor: CodeExecutorPort,
             system_prompt: str,
-            memory: Neo4jChatMemoryAdapter = None,
+            memory: ChatMemoryPort = None,
             conversation_id: str = "default",
             max_attempts: int = 10
     ):

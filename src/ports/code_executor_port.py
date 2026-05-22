@@ -10,4 +10,4 @@ class CodeExecutorPort(abc.ABC):
 
     @abc.abstractmethod
     def execute_code(self, code: str, input_data_path: Path) -> ExecutionResult:
-        raise NotImplementedError
+        pass

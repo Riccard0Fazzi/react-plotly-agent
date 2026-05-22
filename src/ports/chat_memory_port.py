@@ -6,7 +6,7 @@ class ChatMemoryPort(abc.ABC):
     
     @abc.abstractmethod
     def create_conversation(self, conversation_id: str) -> None:
-        raise NotImplementedError
+        pass
 
     @abc.abstractmethod
     def save_message(
@@ -16,9 +16,8 @@ class ChatMemoryPort(abc.ABC):
             content: str,
             metadata: dict | None = None,
     ) -> None:
-        raise NotImplementedError
+        pass
 
     @abc.abstractmethod
     def load_messages(self, conversation_id: str) -> list[dict[str,str]]:
-        raise NotImplementedError
-    
+        pass

@@ -6,4 +6,4 @@ class LLMPort(abc.ABC):
 
     @abc.abstractmethod
     def chat(self, messages: list[dict[str, str]]) -> str:
-        raise NotImplementedError
+        pass
